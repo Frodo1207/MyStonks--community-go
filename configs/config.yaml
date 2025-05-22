@@ -1,0 +1,16 @@
+app:
+  name: "MyStonks"
+  env: "development"
+  port: 8080
+
+logger:
+  level: "debug"
+  format: "json"
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  dbname: "mystonks"
+  sslmode: "disable"
