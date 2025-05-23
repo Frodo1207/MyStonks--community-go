@@ -1,0 +1,15 @@
+common:
+  deploy_dir: /home/dev/deploy # 部署目录,存放log等
+  log_level: info
+
+server:
+  RunMode: debug
+  HttpPort: 8000
+  ReadTimeout: 60
+  WriteTimeout: 60
+mysql:
+  host: localhost
+  port: 3306
+  user: root
+  password: root
+  database: mystonks
