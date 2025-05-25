@@ -1,6 +1,7 @@
 package server
 
 import (
+	"MyStonks-go/internal/common/redisclient"
 	"MyStonks-go/internal/models"
 	"MyStonks-go/internal/routers"
 	"fmt"
@@ -23,7 +24,10 @@ func StartServer(v *viper.Viper) {
 		writeTimeout   = time.Duration(v.GetInt("server.WriteTimeout")) * time.Second
 		maxHeaderBytes = 1 << 20
 	)
-	models.Setup(v)
+	{
+		models.Setup(v)
+		redisclient.Setup(v)
+	}
 	gin.SetMode(mode)
 	routersInit := routers.InitRouter()
 	server := &http.Server{

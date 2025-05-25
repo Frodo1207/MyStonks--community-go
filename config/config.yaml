@@ -7,9 +7,13 @@ server:
   HttpPort: 8000
   ReadTimeout: 60
   WriteTimeout: 60
+
 mysql:
   host: localhost
   port: 3306
   user: root
   password: root
   database: mystonks
+
+redis:
+  url: redis://localhost:6379/0
