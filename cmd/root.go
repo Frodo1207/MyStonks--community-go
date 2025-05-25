@@ -34,7 +34,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initAll)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/config.yaml)")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "common.log_level", "info", "log level (trace, debug, info, warn, error, fatal, panic)")
 	if err := viper.BindPFlag("common.log_level", rootCmd.PersistentFlags().Lookup("common.log_level")); err != nil {
 		log.Panic().Err(err).Send()

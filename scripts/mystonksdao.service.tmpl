@@ -1,0 +1,17 @@
+[Unit]
+Description=MyStonksDao Service
+Requires=network.target
+After=network.target
+
+[Service]
+User=${USER}
+WorkingDirectory=${HOME}
+Type=simple
+ExecStart=/bin/bash -c 'source ${HOME}/.bash_profile && ${HOME}/deploy/MyStonksDao start --config=${HOME}/config.yaml'
+Restart=always
+RestartSec=30s
+TimeoutSec=10s
+LimitNOFILE=655350
+
+[Install]
+WantedBy=multi-user.target
