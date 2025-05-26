@@ -38,5 +38,5 @@ func Setup(v *viper.Viper) {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
-	db.AutoMigrate(&User{})
+	// db.AutoMigrate(&User{})
 }

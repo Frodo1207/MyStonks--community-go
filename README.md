@@ -1,3 +1,7 @@
+## DEV
+`sh ./boostrap.sh`
+`sh ./dev-start.sh` 
+
 ## BUILD
 CGOENABLED=0 GOOS=linux GOARCH=amd64 go build -o MyStonksDao
 
