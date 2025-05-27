@@ -1,0 +1,55 @@
+name: MystonksDAO Deploy
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set timestamp tag
+      id: vars
+      run: echo "TAG=$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
+
+    - name: Build docker image
+      run: docker build -t msDAOServer:${{ env.TAG }} .
+
+    - name: Save docker image to tar
+      run: docker save msDAOServer:${{ env.TAG }} -o msDAOServer_${{ env.TAG }}.tar
+
+    - name: Replace tag placeholder in docker-compose.yml
+      run: |
+        sed "s/TAG_PLACEHOLDER/${{ env.TAG }}/g" docker-compose.yml > docker-compose.deploy.yml
+
+    - name: Setup SSH key
+      uses: webfactory/ssh-agent@v0.8.1
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Transfer image tar and docker-compose file
+      run: |
+        scp -P ${{ secrets.REMOTE_PORT }} msDAOServer_${{ env.TAG }}.tar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/root/deploy/
+        scp -P ${{ secrets.REMOTE_PORT }} docker-compose.deploy.yml ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/root/deploy/docker-compose.yml
+
+    - name: Deploy on remote server
+      run: ssh -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd /root/deploy && docker load -i msDAOServer_${{ env.TAG }}.tar && docker-compose up -d"
+
+    - name: Telegram success notification
+      if: success()
+      run: |
+        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d text="✅ 部署成功！镜像tag：${{ env.TAG }}"
+
+    - name: Telegram failure notification
+      if: failure()
+      run: |
+        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d text="❌ 部署失败！请查看GitHub Actions日志。"
