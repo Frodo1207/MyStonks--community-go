@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - master
+    - sit_deploy
 
 jobs:
   deploy:
