@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users": {
+        "/api/v1/auth/login": {
             "post": {
-                "description": "创建用户",
+                "description": "使用钱包签名登录系统",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,17 +25,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "认证"
                 ],
-                "summary": "创建用户",
+                "summary": "钱包登录",
                 "parameters": [
                     {
-                        "description": "用户信息",
-                        "name": "user",
+                        "description": "登录请求参数",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schema.UserCreateReq"
+                            "$ref": "#/definitions/schema.LoginReq"
                         }
                     }
                 ],
@@ -43,15 +43,15 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schema.UserResp"
+                            "$ref": "#/definitions/schema.LoginResp"
                         }
                     }
                 }
             }
         },
-        "/users/{id}": {
-            "get": {
-                "description": "根据用户ID获取用户详细信息",
+        "/api/v1/auth/logout": {
+            "post": {
+                "description": "退出系统登录",
                 "consumes": [
                     "application/json"
                 ],
@@ -59,15 +59,106 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "认证"
                 ],
-                "summary": "获取用户信息",
+                "summary": "退出登录",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "用户ID",
-                        "name": "id",
-                        "in": "path",
+                        "description": "退出登录请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.LogoutReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schema.LogoutResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/nonce": {
+            "get": {
+                "description": "获取用于钱包签名的随机数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "获取登录随机数",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schema.NonceResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "使用刷新令牌刷新访问令牌",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "刷新令牌",
+                "parameters": [
+                    {
+                        "description": "刷新令牌请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schema.RefreshTokenReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schema.RefreshTokenResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user": {
+            "get": {
+                "description": "get user info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "get user info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "sol address",
+                        "name": "sol_address",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -83,17 +174,135 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "schema.UserCreateReq": {
-            "type": "object",
-            "required": [
-                "email",
-                "name"
+        "response.ErrorCode": {
+            "type": "integer",
+            "enum": [
+                0,
+                10001,
+                10002,
+                10003,
+                10004,
+                20001
             ],
+            "x-enum-varnames": [
+                "ErrorCodeSuccess",
+                "ErrorCodeInternalError",
+                "ErrorCodeInvalidToken",
+                "ErrorCodeInvalidRequest",
+                "ErrorCodeInvalidSignature",
+                "ErrorCodeUserNotFound"
+            ]
+        },
+        "schema.LoginReq": {
+            "type": "object",
             "properties": {
-                "email": {
+                "address": {
                     "type": "string"
                 },
-                "name": {
+                "nonce": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.LoginResp": {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "code": {
+                    "$ref": "#/definitions/response.ErrorCode"
+                },
+                "data": {
+                    "$ref": "#/definitions/schema.TokenPair"
+                }
+            }
+        },
+        "schema.LogoutReq": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.LogoutResp": {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "code": {
+                    "$ref": "#/definitions/response.ErrorCode"
+                },
+                "data": {
+                    "type": "object"
+                }
+            }
+        },
+        "schema.NonceResp": {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "code": {
+                    "$ref": "#/definitions/response.ErrorCode"
+                },
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "nonce": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "schema.RefreshTokenReq": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.RefreshTokenResp": {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "code": {
+                    "$ref": "#/definitions/response.ErrorCode"
+                },
+                "data": {
+                    "$ref": "#/definitions/schema.TokenPair"
+                }
+            }
+        },
+        "schema.TokenPair": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
                     "type": "string"
                 }
             }
@@ -101,14 +310,28 @@ const docTemplate = `{
         "schema.UserResp": {
             "type": "object",
             "properties": {
-                "email": {
-                    "type": "string"
+                "args": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "id": {
-                    "type": "integer"
+                "code": {
+                    "$ref": "#/definitions/response.ErrorCode"
                 },
-                "name": {
-                    "type": "string"
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "sol_address": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         }

@@ -21,7 +21,7 @@ func Setup(v *viper.Viper) {
 		mysqlDatabase = v.GetString("mysql.database")
 		err           error
 	)
-	db, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+	db, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=UTC",
 		mysqlUser,
 		mysqlPassword,
 		mysqlHost,

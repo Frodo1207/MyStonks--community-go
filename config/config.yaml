@@ -1,4 +1,5 @@
 common:
+  env: dev
   deploy_dir: /home/dev/deploy # 部署目录,存放log等
   log_level: info
 

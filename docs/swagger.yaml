@@ -1,59 +1,206 @@
 definitions:
-  schema.UserCreateReq:
+  response.ErrorCode:
+    enum:
+    - 0
+    - 10001
+    - 10002
+    - 10003
+    - 10004
+    - 20001
+    type: integer
+    x-enum-varnames:
+    - ErrorCodeSuccess
+    - ErrorCodeInternalError
+    - ErrorCodeInvalidToken
+    - ErrorCodeInvalidRequest
+    - ErrorCodeInvalidSignature
+    - ErrorCodeUserNotFound
+  schema.LoginReq:
     properties:
-      email:
+      address:
         type: string
-      name:
+      nonce:
         type: string
-    required:
-    - email
-    - name
+      signature:
+        type: string
+    type: object
+  schema.LoginResp:
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      code:
+        $ref: '#/definitions/response.ErrorCode'
+      data:
+        $ref: '#/definitions/schema.TokenPair'
+    type: object
+  schema.LogoutReq:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  schema.LogoutResp:
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      code:
+        $ref: '#/definitions/response.ErrorCode'
+      data:
+        type: object
+    type: object
+  schema.NonceResp:
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      code:
+        $ref: '#/definitions/response.ErrorCode'
+      data:
+        properties:
+          nonce:
+            type: string
+        type: object
+    type: object
+  schema.RefreshTokenReq:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  schema.RefreshTokenResp:
+    properties:
+      args:
+        items:
+          type: string
+        type: array
+      code:
+        $ref: '#/definitions/response.ErrorCode'
+      data:
+        $ref: '#/definitions/schema.TokenPair'
+    type: object
+  schema.TokenPair:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
     type: object
   schema.UserResp:
     properties:
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
+      args:
+        items:
+          type: string
+        type: array
+      code:
+        $ref: '#/definitions/response.ErrorCode'
+      data:
+        properties:
+          id:
+            type: integer
+          sol_address:
+            type: string
+          username:
+            type: string
+        type: object
     type: object
 info:
   contact: {}
 paths:
-  /users:
+  /api/v1/auth/login:
     post:
       consumes:
       - application/json
-      description: 创建用户
+      description: 使用钱包签名登录系统
       parameters:
-      - description: 用户信息
+      - description: 登录请求参数
         in: body
-        name: user
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/schema.UserCreateReq'
+          $ref: '#/definitions/schema.LoginReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schema.UserResp'
-      summary: 创建用户
+            $ref: '#/definitions/schema.LoginResp'
+      summary: 钱包登录
       tags:
-      - 用户
-  /users/{id}:
+      - 认证
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 退出系统登录
+      parameters:
+      - description: 退出登录请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/schema.LogoutReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schema.LogoutResp'
+      summary: 退出登录
+      tags:
+      - 认证
+  /api/v1/auth/nonce:
     get:
       consumes:
       - application/json
-      description: 根据用户ID获取用户详细信息
+      description: 获取用于钱包签名的随机数
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schema.NonceResp'
+      summary: 获取登录随机数
+      tags:
+      - 认证
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用刷新令牌刷新访问令牌
       parameters:
-      - description: 用户ID
-        in: path
-        name: id
+      - description: 刷新令牌请求参数
+        in: body
+        name: body
         required: true
-        type: integer
+        schema:
+          $ref: '#/definitions/schema.RefreshTokenReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schema.RefreshTokenResp'
+      summary: 刷新令牌
+      tags:
+      - 认证
+  /api/v1/user:
+    get:
+      consumes:
+      - application/json
+      description: get user info
+      parameters:
+      - description: sol address
+        in: query
+        name: sol_address
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -61,7 +208,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/schema.UserResp'
-      summary: 获取用户信息
+      summary: get user info
       tags:
-      - 用户
+      - user
 swagger: "2.0"
