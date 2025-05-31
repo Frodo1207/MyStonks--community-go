@@ -66,6 +66,10 @@ func initLogger() {
 		log.Panic().Err(err).Send()
 	}
 	dir := viper.GetString("common.deploy_dir")
+	err = os.MkdirAll(dir+"/log", 0755)
+	if err != nil {
+		log.Panic().Err(err).Send()
+	}
 	logFile := &lumberjack.Logger{
 		Filename: dir + "/log/server.log",
 		MaxSize:  10,

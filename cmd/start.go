@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"MyStonks-go/internal/server"
-	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -25,7 +24,6 @@ func init() {
 		if err := viper.BindPFlag("server.RunMode", startCmd.PersistentFlags().Lookup("server.RunMode")); err != nil {
 			log.Panic().Err(err).Send()
 		}
-		fmt.Println("xxxxxxx", viper.GetString("server.RunMode"))
 		startCmd.PersistentFlags().Int("server.HttpPort", 8000, "server http port")
 		if err := viper.BindPFlag("server.HttpPort", startCmd.PersistentFlags().Lookup("server.HttpPort")); err != nil {
 			log.Panic().Err(err).Send()

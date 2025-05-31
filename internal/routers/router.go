@@ -1,11 +1,11 @@
 package routers
 
 import (
-	apiV1 "MyStonks-go/internal/routers/api/v1"
+	_ "MyStonks-go/docs"
+	"MyStonks-go/internal/common/middleware"
+	v1 "MyStonks-go/internal/routers/api/v1"
 	"net/http"
 	"time"
-
-	_ "MyStonks-go/docs"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -62,11 +62,17 @@ func InitRouter() *gin.Engine {
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	apiv1 := r.Group("/api/v1")
-
-	// user相关API
-	apiv1.POST("/users", apiV1.CreateUser)
-	apiv1.GET("/users/:id", apiV1.GetUser)
-
+	apiV1 := r.Group("/api/v1")
+	apiV1Protected := apiV1.Group("", middleware.AuthMiddleware())
+	{
+		apiV1Auth := apiV1.Group("/auth")
+		apiV1Auth.GET("/nonce", v1.GetNonce)
+		apiV1Auth.POST("/login", v1.Login)
+		apiV1Auth.POST("/logout", v1.Logout)
+		apiV1Auth.POST("/refresh", v1.RefreshToken)
+	}
+	{
+		apiV1Protected.GET("/user", v1.GetUserInfo)
+	}
 	return r
 }

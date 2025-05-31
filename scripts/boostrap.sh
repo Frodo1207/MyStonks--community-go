@@ -45,4 +45,4 @@ if [ -f tmp/server ]; then
 fi
 
 echo "🎉 Bootstrap complete. You can now run:"
-echo "sh ./dev-start.sh"
+echo "sh ./scripts/dev-start.sh"

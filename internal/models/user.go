@@ -3,29 +3,30 @@ package models
 import "time"
 
 type User struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email" gorm:"unique"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         uint      `json:"id" gorm:"primaryKey;column:id;"`
+	SolAddress string    `json:"sol_address" gorm:"column:sol_address;"`
+	Username   string    `json:"username" gorm:"column:username;"`
+	CreatedAt  time.Time `json:"created_at" gorm:"column:created_at;"`
+	UpdatedAt  time.Time `json:"updated_at" gorm:"column:updated_at;"`
+	IsDeleted  bool      `json:"is_deleted" gorm:"column:is_deleted;"`
 }
 
-func CreateUser(user *User) error {
-	return db.Create(user).Error
+func (*User) TableName() string {
+	return "users"
 }
 
-func GetUserByID(id string) (*User, error) {
+func CreateUserIfNotExists(solAddress string) error {
 	var user User
-	if err := db.First(&user, id).Error; err != nil {
+	if err := db.Where(&User{SolAddress: solAddress}).FirstOrCreate(&user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetUserBySolAddress(solAddress string) (*User, error) {
+	var user User
+	if err := db.Where("sol_address = ? and is_deleted = ?", solAddress, false).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
-}
-
-func GetAllUsers() ([]*User, error) {
-	var users []*User
-	if err := db.Find(&users).Error; err != nil {
-		return nil, err
-	}
-	return users, nil
 }

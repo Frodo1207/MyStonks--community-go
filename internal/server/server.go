@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -18,6 +19,7 @@ func init() {
 
 func StartServer(v *viper.Viper) {
 	var (
+		env            = v.GetString("common.env")
 		mode           = v.GetString("server.RunMode")
 		endPoint       = fmt.Sprintf(":%d", v.GetInt("server.HttpPort"))
 		readTimeout    = time.Duration(v.GetInt("server.ReadTimeout")) * time.Second
@@ -30,6 +32,9 @@ func StartServer(v *viper.Viper) {
 	}
 	gin.SetMode(mode)
 	routersInit := routers.InitRouter()
+	if env != "prod" {
+		routersInit.Use(cors.Default())
+	}
 	server := &http.Server{
 		Addr:           endPoint,
 		Handler:        routersInit,
