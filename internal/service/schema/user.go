@@ -1,12 +1,12 @@
 package schema
 
-type UserCreateReq struct {
-	Name  string `json:"name" binding:"required"`
-	Email string `json:"email" binding:"required"`
-}
+import "MyStonks-go/internal/common/response"
 
 type UserResp struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	response.Response
+	Data struct {
+		ID         uint   `json:"id"`
+		SolAddress string `json:"sol_address"`
+		Username   string `json:"username"`
+	} `json:"data"`
 }
