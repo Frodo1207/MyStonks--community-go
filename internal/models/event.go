@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// Event 事件表结构体，对应 events 表
 // 用于记录系统支持的事件类型及描述
 
 type Event struct {
@@ -16,7 +15,6 @@ type Event struct {
 	IsDeleted   bool      `json:"is_deleted" gorm:"column:is_deleted;type:tinyint(1);default:0;"` // 是否删除（0否，1是）
 }
 
-// TableName 设置表名为 events
 func (*Event) TableName() string {
 	return "event"
 }

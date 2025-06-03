@@ -16,7 +16,6 @@ type PointAccount struct {
 	IsDeleted bool      `json:"is_deleted" gorm:"column:is_deleted;type:tinyint(1);default:0;"`    // 是否删除（0否，1是）
 }
 
-// TableName 设置表名为 point_accounts
 func (*PointAccount) TableName() string {
-	return "point_accounts"
+	return "point_account"
 }

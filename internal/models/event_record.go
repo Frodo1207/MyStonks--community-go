@@ -22,7 +22,6 @@ type EventRecord struct {
 	IsDeleted bool      `json:"is_deleted" gorm:"column:is_deleted;type:tinyint(1);default:0;"`       // 是否删除（0否，1是）
 }
 
-// TableName 设置表名为 event_record
 func (*EventRecord) TableName() string {
 	return "event_record"
 }
