@@ -325,6 +325,9 @@ const docTemplate = `{
                         "id": {
                             "type": "integer"
                         },
+                        "points": {
+                            "type": "number"
+                        },
                         "sol_address": {
                             "type": "string"
                         },
