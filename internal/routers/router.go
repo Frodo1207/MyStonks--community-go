@@ -4,6 +4,7 @@ import (
 	_ "MyStonks-go/docs"
 	"MyStonks-go/internal/common/middleware"
 	v1 "MyStonks-go/internal/routers/api/v1"
+	"github.com/gin-contrib/cors"
 	"net/http"
 	"time"
 
@@ -60,6 +61,15 @@ func InitRouter() *gin.Engine {
 	r.Use(GinLogger())
 	r.Use(GinRecovery())
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // 可设置具体前端地址，例如 http://localhost:3000
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	apiV1 := r.Group("/api/v1")
@@ -73,6 +83,17 @@ func InitRouter() *gin.Engine {
 	}
 	{
 		apiV1Protected.GET("/user", v1.GetUserInfo)
+	}
+	{
+		// 任务相关接口（部分需要登录）
+		apiV1.GET("/tasks", v1.GetTasksByCategory)          // category=daily|newbie|other=
+		apiV1.GET("/task/complete", v1.CheckCompleteTask)   // ?user_id=1&task_id=101
+		apiV1.POST("/task/progress", v1.UpdateTaskProgress) // ?user_id=1&task_id=201&progress=50
+		// 排行榜
+		apiV1.GET("/leaderboard", v1.GetLeaderboard)
+		// 用户相关接口（需登录）
+		apiV1.GET("/user/task", v1.GetUserInfoTask)
+		apiV1.GET("/user/rank", v1.GetUserRank)
 	}
 	return r
 }

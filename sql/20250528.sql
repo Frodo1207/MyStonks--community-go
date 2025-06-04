@@ -11,7 +11,6 @@ CREATE TABLE `users` (
   UNIQUE KEY idx_sol_address (`sol_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
-
 CREATE TABLE `event` (
   id VARCHAR(64) NOT NULL COMMENT '事件ID，如 TASK_COMPLETE、ON_CHAIN_TRANSFER 等',
   name VARCHAR(128) NOT NULL COMMENT '事件名称',
@@ -43,7 +42,6 @@ CREATE TABLE `event_point_rule` (
   UNIQUE KEY `uniq_event_rule` (`event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件对应积分奖励规则表';
 
-
 CREATE TABLE `event_record` (
   id VARCHAR(64) NOT NULL COMMENT '事件记录ID，唯一',
   event_id VARCHAR(64) NOT NULL COMMENT '事件ID',
@@ -61,3 +59,4 @@ CREATE TABLE `event_record` (
   KEY idx_event_id (`event_id`),
   KEY idx_user_id (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件记录表';
+
