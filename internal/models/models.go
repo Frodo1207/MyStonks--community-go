@@ -10,9 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
-
-func Setup(v *viper.Viper) {
+func Setup(v *viper.Viper) *gorm.DB {
 	var (
 		mysqlHost     = v.GetString("mysql.host")
 		mysqlPort     = v.GetInt("mysql.port")
@@ -21,7 +19,7 @@ func Setup(v *viper.Viper) {
 		mysqlDatabase = v.GetString("mysql.database")
 		err           error
 	)
-	db, err = gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=UTC",
+	db, err := gorm.Open(mysql.Open(fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=UTC",
 		mysqlUser,
 		mysqlPassword,
 		mysqlHost,
@@ -39,4 +37,5 @@ func Setup(v *viper.Viper) {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	// db.AutoMigrate(&User{})
+	return db
 }

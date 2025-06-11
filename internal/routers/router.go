@@ -15,6 +15,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type Router struct {
+	Eng     *gin.Engine
+	taskApi *v1.TaskApi
+	userApi *v1.UserApi
+}
+
 func GinLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -56,7 +62,12 @@ func GinRecovery() gin.HandlerFunc {
 	}
 }
 
-func InitRouter() *gin.Engine {
+func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi) *Router {
+
+	router := &Router{}
+	router.taskApi = taskApi
+	router.userApi = userApi
+
 	r := gin.New()
 	r.Use(GinLogger())
 	r.Use(GinRecovery())
@@ -76,24 +87,22 @@ func InitRouter() *gin.Engine {
 	apiV1Protected := apiV1.Group("", middleware.AuthMiddleware())
 	{
 		apiV1Auth := apiV1.Group("/auth")
-		apiV1Auth.GET("/nonce", v1.GetNonce)
-		apiV1Auth.POST("/login", v1.Login)
-		apiV1Auth.POST("/logout", v1.Logout)
-		apiV1Auth.POST("/refresh", v1.RefreshToken)
-	}
-	{
-		apiV1Protected.GET("/user", v1.GetUserInfo)
+		apiV1Auth.GET("/nonce", router.userApi.GetNonce) // 生成nonce
+		apiV1Auth.POST("/login", router.userApi.Login)   // 登录
+		apiV1Auth.POST("/logout", router.userApi.Logout) // 登出
+		apiV1Auth.POST("/refresh", router.userApi.RefreshToken)
 	}
 	{
 		// 任务相关接口（部分需要登录）
-		apiV1.GET("/tasks", v1.GetTasksByCategory)          // category=daily|newbie|other=
-		apiV1.GET("/task/complete", v1.CheckCompleteTask)   // ?user_id=1&task_id=101
-		apiV1.POST("/task/progress", v1.UpdateTaskProgress) // ?user_id=1&task_id=201&progress=50
-		// 排行榜
-		apiV1.GET("/leaderboard", v1.GetLeaderboard)
-		// 用户相关接口（需登录）
-		apiV1.GET("/user/task", v1.GetUserInfoTask)
-		apiV1.GET("/user/rank", v1.GetUserRank)
+		apiV1.GET("/tasks", router.taskApi.GetTasksByCategory)           // category=daily|newbie|other=
+		apiV1.GET("/task/complete", router.taskApi.CheckCompleteTask)    // ?user_id=1&task_id=101
+		apiV1.POST("/task/progress", router.taskApi.UpdateTaskProgress)  // ?user_id=1&task_id=201&progress=50
+		apiV1.GET("/task/stonks/trade", router.taskApi.CheckStonksTrade) // ?task_id=201
+		apiV1.GET("/leaderboard", router.taskApi.GetLeaderboard)
+		apiV1Protected.GET("/user/task", router.taskApi.GetUserInfoTask)
+		apiV1Protected.GET("/task/finish", router.taskApi.FinishTask)
+		apiV1.GET("/user/rank", router.taskApi.GetUserRank)
 	}
-	return r
+	router.Eng = r
+	return router
 }

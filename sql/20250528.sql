@@ -1,62 +1,73 @@
 CREATE TABLE `users` (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-  sol_address VARCHAR(128) NOT NULL COMMENT 'sol钱包地址',
-  username VARCHAR(64) DEFAULT NULL COMMENT '昵称，可选',
+                         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+                         sol_address VARCHAR(128) NOT NULL COMMENT 'sol钱包地址',
+                         username VARCHAR(64) DEFAULT NULL COMMENT '昵称，可选',
+                         total_points INT NOT NULL DEFAULT 0 COMMENT '用户总积分',
 
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
+                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                         is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
 
-  PRIMARY KEY (`id`),
-  UNIQUE KEY idx_sol_address (`sol_address`)
+                         PRIMARY KEY (`id`),
+                         UNIQUE KEY idx_sol_address (`sol_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
-CREATE TABLE `event` (
-  id VARCHAR(64) NOT NULL COMMENT '事件ID，如 TASK_COMPLETE、ON_CHAIN_TRANSFER 等',
-  name VARCHAR(128) NOT NULL COMMENT '事件名称',
-  description TEXT COMMENT '事件描述',
+CREATE TABLE `tasks` (
+                         id INT NOT NULL COMMENT '任务ID',
+                         step INT COMMENT '步骤顺序',
+                         title VARCHAR(255) NOT NULL COMMENT '任务标题',
+                         description TEXT COMMENT '任务描述',
+                         reward INT NOT NULL DEFAULT 0 COMMENT '奖励积分',
+                         category VARCHAR(50) NOT NULL COMMENT '任务分类(newbie/daily/other)',
+                         icon VARCHAR(100) COMMENT '图标',
+                         special_action VARCHAR(100) COMMENT '特殊动作标识',
 
-  created_by VARCHAR(64) NOT NULL COMMENT '创建人ID',
-  updated_by VARCHAR(64) NOT NULL COMMENT '更新人ID',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
+                         created_by VARCHAR(64) NOT NULL COMMENT '创建人ID',
+                         updated_by VARCHAR(64) NOT NULL COMMENT '更新人ID',
+                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                         is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
 
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件表';
+                         PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务表';
 
-CREATE TABLE `event_point_rule` (
-  `id` VARCHAR(64) NOT NULL COMMENT '规则ID，唯一',
-  `event_id` VARCHAR(64) NOT NULL COMMENT '关联事件ID',
-  `points` DECIMAL(18,6) NOT NULL COMMENT '触发该事件时奖励的积分数量，支持正负',
-  `description` VARCHAR(256) DEFAULT NULL COMMENT '规则描述',
+CREATE TABLE `user_tasks` (
+                              id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+                              user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+                              sol_address VARCHAR(128) NOT NULL COMMENT '用户Solana钱包地址',
+                              task_id INT NOT NULL COMMENT '任务ID',
+                              completed_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '完成时间',
+                              verified TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已验证（0否，1是）',
 
-  -- 公共字段
-  `created_by` VARCHAR(64) NOT NULL COMMENT '创建人ID',
-  `updated_by` VARCHAR(64) NOT NULL COMMENT '更新人ID',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
+                              created_by VARCHAR(64) NOT NULL COMMENT '创建人ID',
+                              updated_by VARCHAR(64) NOT NULL COMMENT '更新人ID',
+                              created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                              updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                              is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
 
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_event_rule` (`event_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件对应积分奖励规则表';
+                              PRIMARY KEY (`id`),
+                              UNIQUE KEY uk_user_task (`user_id`, `task_id`),
+                              INDEX idx_sol_address (`sol_address`),
+                              INDEX idx_task_id (`task_id`),
+                              FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+                              FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户任务完成记录表';
 
 CREATE TABLE `event_record` (
-  id VARCHAR(64) NOT NULL COMMENT '事件记录ID，唯一',
-  event_id VARCHAR(64) NOT NULL COMMENT '事件ID',
-  user_id VARCHAR(64) NOT NULL COMMENT '触发事件的用户ID',
-  metadata JSON DEFAULT NULL COMMENT '事件具体数据，比如任务详情、链上tx哈希等',
-  event_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件发生时间',
+                                id VARCHAR(64) NOT NULL COMMENT '事件记录ID，唯一',
+                                event_type VARCHAR(64) NOT NULL COMMENT '事件类型(TASK_COMPLETE/ON_CHAIN_TRANSFER等)',
+                                user_id BIGINT UNSIGNED NOT NULL COMMENT '触发事件的用户ID',
+                                points_change INT NOT NULL COMMENT '积分变动值',
+                                metadata JSON DEFAULT NULL COMMENT '事件具体数据',
 
-  created_by VARCHAR(64) NOT NULL COMMENT '创建人ID',
-  updated_by VARCHAR(64) NOT NULL COMMENT '更新人ID',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
+                                created_by VARCHAR(64) NOT NULL COMMENT '创建人ID',
+                                updated_by VARCHAR(64) NOT NULL COMMENT '更新人ID',
+                                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0否，1是）',
 
-  PRIMARY KEY (`id`),
-  KEY idx_event_id (`event_id`),
-  KEY idx_user_id (`user_id`)
+                                PRIMARY KEY (`id`),
+                                KEY idx_user_id (`user_id`),
+                                KEY idx_event_type (`event_type`),
+                                FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件记录表';
-

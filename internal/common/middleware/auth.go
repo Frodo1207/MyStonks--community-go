@@ -3,6 +3,7 @@ package middleware
 import (
 	"MyStonks-go/internal/common/response"
 	"MyStonks-go/internal/service"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,7 +13,6 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
-
 		if solAddress, ok := validateToken(token); !ok {
 			c.JSON(http.StatusUnauthorized, response.ErrorResponse(response.ErrorCodeInvalidToken, []string{}))
 			c.Abort()
@@ -35,8 +35,10 @@ func validateToken(token string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
+	fmt.Println(2222)
 
 	solAddress := claims.WalletAddress
+	fmt.Println(333)
 
 	return solAddress, true
 }

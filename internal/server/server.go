@@ -4,11 +4,14 @@ import (
 	"MyStonks-go/internal/common/redisclient"
 	"MyStonks-go/internal/models"
 	"MyStonks-go/internal/routers"
+	v1 "MyStonks-go/internal/routers/api/v1"
+	"MyStonks-go/internal/service"
+	"MyStonks-go/internal/store"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"net/http"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -26,18 +29,27 @@ func StartServer(v *viper.Viper) {
 		writeTimeout   = time.Duration(v.GetInt("server.WriteTimeout")) * time.Second
 		maxHeaderBytes = 1 << 20
 	)
-	{
-		models.Setup(v)
-		redisclient.Setup(v)
-	}
+
 	gin.SetMode(mode)
-	routersInit := routers.InitRouter()
+	db := models.Setup(v)
+	redisclient.Setup(v)
+
+	userStore := store.NewUserStore(db)
+	srv := service.NewUserSrv(userStore)
+	userApi := v1.NewUserApi(srv)
+
+	taskStore := store.NewTaskStore(db)
+	taskService := service.NewTaskService(taskStore, userStore)
+	taskApi := v1.NewTaskApi(taskService)
+
+	router_ := routers.InitRouter(taskApi, userApi)
+
 	if env != "prod" {
-		routersInit.Use(cors.Default())
+		router_.Eng.Use(cors.Default())
 	}
 	server := &http.Server{
 		Addr:           endPoint,
-		Handler:        routersInit,
+		Handler:        router_.Eng,
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: maxHeaderBytes,
