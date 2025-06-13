@@ -42,7 +42,11 @@ func StartServer(v *viper.Viper) {
 	taskService := service.NewTaskService(taskStore, userStore)
 	taskApi := v1.NewTaskApi(taskService)
 
-	router_ := routers.InitRouter(taskApi, userApi)
+	eventStore := store.NewEventStore(db)
+	eventService := service.NewEventSrv(eventStore)
+	eventApi := v1.NewEventApi(eventService)
+
+	router_ := routers.InitRouter(taskApi, userApi, eventApi)
 
 	if env != "prod" {
 		router_.Eng.Use(cors.Default())

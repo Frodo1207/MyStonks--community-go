@@ -29,12 +29,41 @@ func (u *UserSrv) CreateUserIfNotExists(solAddress string) error {
 	return u.us.CreateUserIfNotExists(solAddress)
 }
 
+func (u *UserSrv) GetUserTgInfo(addr string) (*models.TelegramBinding, error) {
+	tgInfo, err := u.us.GetUserTgInfoByAddr(addr)
+	return tgInfo, err
+}
+
 func (u *UserSrv) GetUserInfo(solAddress string) (*models.User, error) {
 	user, err := u.us.GetUserBySolAddress(solAddress)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (u *UserSrv) BindTg(req *schema.BindTgReq) error {
+	user, err := u.us.GetUserBySolAddress(req.Addr)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return fmt.Errorf("user not found")
+	}
+	tgBind := models.TelegramBinding{
+		Addr:       req.Addr,
+		FirstName:  req.FirstName,
+		TelegramID: req.TelegramID,
+		Username:   req.Username,
+		PhotoURL:   req.PhotoURL,
+		AuthDate:   time.Now().Unix(),
+		Hash:       req.Hash,
+	}
+	err = u.us.BindTgToUser(tgBind)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *UserSrv) GenerateNonce() (string, error) {

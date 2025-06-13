@@ -16,9 +16,10 @@ import (
 )
 
 type Router struct {
-	Eng     *gin.Engine
-	taskApi *v1.TaskApi
-	userApi *v1.UserApi
+	Eng      *gin.Engine
+	taskApi  *v1.TaskApi
+	userApi  *v1.UserApi
+	eventApi *v1.EventApi
 }
 
 func GinLogger() gin.HandlerFunc {
@@ -62,11 +63,12 @@ func GinRecovery() gin.HandlerFunc {
 	}
 }
 
-func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi) *Router {
+func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi, eventApi *v1.EventApi) *Router {
 
 	router := &Router{}
 	router.taskApi = taskApi
 	router.userApi = userApi
+	router.eventApi = eventApi
 
 	r := gin.New()
 	r.Use(GinLogger())
@@ -91,9 +93,9 @@ func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi) *Router {
 		apiV1Auth.POST("/login", router.userApi.Login)   // 登录
 		apiV1Auth.POST("/logout", router.userApi.Logout) // 登出
 		apiV1Auth.POST("/refresh", router.userApi.RefreshToken)
+		apiV1Auth.POST("/bindtg", router.userApi.BindTg)
 	}
 	{
-		// 任务相关接口（部分需要登录）
 		apiV1.GET("/tasks", router.taskApi.GetTasksByCategory)           // category=daily|newbie|other=
 		apiV1.GET("/task/complete", router.taskApi.CheckCompleteTask)    // ?user_id=1&task_id=101
 		apiV1.POST("/task/progress", router.taskApi.UpdateTaskProgress)  // ?user_id=1&task_id=201&progress=50
@@ -102,6 +104,11 @@ func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi) *Router {
 		apiV1Protected.GET("/user/task", router.taskApi.GetUserInfoTask)
 		apiV1Protected.GET("/task/finish", router.taskApi.FinishTask)
 		apiV1.GET("/user/rank", router.taskApi.GetUserRank)
+		apiV1.GET("/task/refresh/dailytask", router.taskApi.RefreshDailyTask)
+		apiV1.GET("/task/rankbord", router.taskApi.GetRankBoard)
+	}
+	{
+		apiV1.GET("/events", router.eventApi.GetEvents)
 	}
 	router.Eng = r
 	return router

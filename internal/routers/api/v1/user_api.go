@@ -62,8 +62,26 @@ func (u *UserApi) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse(response.ErrorCodeInternalError, []string{}))
 		return
 	}
-
-	c.JSON(http.StatusOK, response.SuccessResponse(tokenPair))
+	LoginResponse := schema.LoginResp{}
+	tgInfo, err := u.userSrv.GetUserTgInfo(req.Address)
+	if err == nil {
+		LoginResponse.TgInfo = schema.TgInfo{
+			FirstName:  tgInfo.FirstName,
+			TelegramID: tgInfo.TelegramID,
+			Username:   tgInfo.Username,
+			PhotoURL:   tgInfo.PhotoURL,
+			AuthDate:   tgInfo.AuthDate,
+			Hash:       tgInfo.Hash,
+		}
+	}
+	LoginResponse.User = schema.UserInfo{
+		Addr: req.Address,
+	}
+	LoginResponse.Data = schema.TokenPair{
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+	}
+	c.JSON(http.StatusOK, LoginResponse)
 }
 
 func (u *UserApi) Logout(c *gin.Context) {
@@ -103,6 +121,23 @@ func (u *UserApi) RefreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponse(tokenPair))
+}
+
+func (u *UserApi) BindTg(c *gin.Context) {
+	var req schema.BindTgReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Warn().Err(err).Msg("绑定Telegram请求参数错误")  // 添加详细日志
+		log.Warn().Msgf("请求数据: %+v", c.Request.Body) // 记录原始请求数据
+		c.JSON(http.StatusBadRequest, response.ErrorResponse(response.ErrorCodeInvalidRequest, []string{err.Error()}))
+		return
+	}
+	err := u.userSrv.BindTg(&req)
+	if err != nil {
+		log.Warn().Err(err).Send()
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse(response.ErrorCodeInternalError, []string{}))
+		return
+	}
+	c.JSON(http.StatusOK, response.SuccessResponse(gin.H{}))
 }
 
 func (u *UserApi) GetNonce(c *gin.Context) {

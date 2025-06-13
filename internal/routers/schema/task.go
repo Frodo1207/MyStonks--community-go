@@ -11,3 +11,13 @@ type Task struct {
 	Icon          string `json:"icon,omitempty"`
 	SpecialAction string `json:"special_action,omitempty"`
 }
+
+type RankItem struct {
+	Addr  string `json:"addr"`
+	Rank  int    `json:"rank"`
+	Score int    `json:"score"`
+}
+
+type RankBoards struct {
+	RankItems []RankItem `json:"rank_items"`
+}

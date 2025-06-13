@@ -3,7 +3,6 @@ package v1
 import (
 	"MyStonks-go/internal/common/response"
 	"MyStonks-go/internal/service"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -23,13 +22,6 @@ func (t *TaskApi) GetTasksByCategory(c *gin.Context) {
 	category := c.Query("category")
 	addr := c.Query("addr")
 
-	if addr == "" {
-		c.JSON(400, gin.H{
-			"code":    400,
-			"message": "缺少地址参数",
-		})
-		return
-	}
 	if category == "" {
 		c.JSON(400, gin.H{
 			"code":    400,
@@ -53,9 +45,9 @@ func (t *TaskApi) GetTasksByCategory(c *gin.Context) {
 }
 
 func (t *TaskApi) GetUserInfoTask(c *gin.Context) {
-	userid := c.Query("user_id")
-	fmt.Print(userid)
-	userInfoTask, err := t.taskService.GetUserInfoTask(userid)
+	addr := c.Query("addr")
+
+	userInfoTask, err := t.taskService.GetUserInfoTask(addr)
 	if err != nil {
 		c.JSON(500, map[string]interface{}{
 			"code":    500,
@@ -112,6 +104,30 @@ func (t *TaskApi) CheckStonksTrade(c *gin.Context) {
 		"message":  "success trade",
 		"is_trade": true,
 	})
+}
+
+func (t *TaskApi) RefreshDailyTask(c *gin.Context) {
+	err := t.taskService.RefreshDailyTask()
+	if err != nil {
+		c.JSON(500, gin.H{
+			"code":    500,
+			"message": "刷新任务失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, response.SuccessResponse("刷新任务成功"))
+}
+
+func (t *TaskApi) GetRankBoard(c *gin.Context) {
+	rankBoard, err := t.taskService.GetRankBoard()
+	if err != nil {
+		c.JSON(500, gin.H{
+			"code":    500,
+			"message": "获取排行榜失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, rankBoard)
 }
 
 func (t *TaskApi) UpdateTaskProgress(c *gin.Context) {}
