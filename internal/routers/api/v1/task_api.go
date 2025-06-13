@@ -23,13 +23,6 @@ func (t *TaskApi) GetTasksByCategory(c *gin.Context) {
 	category := c.Query("category")
 	addr := c.Query("addr")
 
-	if addr == "" {
-		c.JSON(400, gin.H{
-			"code":    400,
-			"message": "缺少地址参数",
-		})
-		return
-	}
 	if category == "" {
 		c.JSON(400, gin.H{
 			"code":    400,
@@ -112,6 +105,22 @@ func (t *TaskApi) CheckStonksTrade(c *gin.Context) {
 		"message":  "success trade",
 		"is_trade": true,
 	})
+}
+
+func (t *TaskApi) RefreshDailyTask(c *gin.Context) {
+	err := t.taskService.RefreshDailyTask()
+	if err != nil {
+		c.JSON(500, gin.H{
+			"code":    500,
+			"message": "刷新任务失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, response.SuccessResponse("刷新任务成功"))
+}
+
+func (t *TaskApi) GetRankBoard(c *gin.Context) {
+
 }
 
 func (t *TaskApi) UpdateTaskProgress(c *gin.Context) {}

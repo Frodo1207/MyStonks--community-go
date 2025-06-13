@@ -16,6 +16,8 @@ type UserStore interface {
 	UpdateUsername(user *models.User, newUsername string) error
 	GetLeaderboard(limit int) ([]models.User, error)
 	AddCompletedTask(addr string, taskID int) error
+	BindTgToUser(tg models.TelegramBinding) error
+	GetUserTgInfoByAddr(addr string) (*models.TelegramBinding, error)
 }
 
 type userStore struct {
@@ -112,6 +114,25 @@ func (s *userStore) GetLeaderboard(limit int) ([]models.User, error) {
 	}
 	return users, nil
 }
+func (s *userStore) BindTgToUser(tg models.TelegramBinding) error {
+	var existing models.TelegramBinding
+
+	// 检查该 Telegram ID 是否已绑定
+	err := s.db.Where("telegram_id = ?", tg.TelegramID).First(&existing).Error
+	if err == nil {
+		// 已存在记录，更新绑定信息
+		tg.ID = existing.ID
+		return s.db.Model(&existing).Updates(tg).Error
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 不存在，创建新的绑定记录
+		return s.db.Create(&tg).Error
+	}
+
+	// 其他数据库错误
+	return err
+}
 
 func (s *userStore) AddCompletedTask(addr string, taskID int) error {
 	// 首先查询用户ID
@@ -122,11 +143,22 @@ func (s *userStore) AddCompletedTask(addr string, taskID int) error {
 
 	// 创建用户任务记录
 	userTask := models.UserTask{
-		UserID: uint64(user.ID),
-		TaskID: taskID,
+		UserID:     uint64(user.ID),
+		SolAddress: addr,
+		TaskID:     taskID,
+		Verified:   true,
 	}
 
 	// 使用Create或者FirstOrCreate避免重复
 	return s.db.Where(models.UserTask{UserID: uint64(user.ID), TaskID: taskID}).
 		FirstOrCreate(&userTask).Error
+}
+
+func (s *userStore) GetUserTgInfoByAddr(addr string) (*models.TelegramBinding, error) {
+	var binding models.TelegramBinding
+	err := s.db.Where("addr = ?", addr).First(&binding).Error
+	if err != nil {
+		return nil, err
+	}
+	return &binding, nil
 }

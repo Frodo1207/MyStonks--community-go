@@ -91,6 +91,7 @@ func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi) *Router {
 		apiV1Auth.POST("/login", router.userApi.Login)   // 登录
 		apiV1Auth.POST("/logout", router.userApi.Logout) // 登出
 		apiV1Auth.POST("/refresh", router.userApi.RefreshToken)
+		apiV1Auth.POST("/bindtg", router.userApi.BindTg)
 	}
 	{
 		// 任务相关接口（部分需要登录）
@@ -102,6 +103,8 @@ func InitRouter(taskApi *v1.TaskApi, userApi *v1.UserApi) *Router {
 		apiV1Protected.GET("/user/task", router.taskApi.GetUserInfoTask)
 		apiV1Protected.GET("/task/finish", router.taskApi.FinishTask)
 		apiV1.GET("/user/rank", router.taskApi.GetUserRank)
+		apiV1.GET("/task/refresh/dailytask", router.taskApi.RefreshDailyTask)
+		apiV1.GET("/task/rankbord", router.taskApi.GetRankBoard)
 	}
 	router.Eng = r
 	return router

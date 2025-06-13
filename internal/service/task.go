@@ -16,15 +16,16 @@ func NewTaskService(tStore store.TaskStore, uStore store.UserStore) *TaskService
 	return &TaskService{tStore: tStore, uStore: uStore}
 }
 
-func (s *TaskService) GetTasksByCategory(category, addr string) ([]models.Task, error) {
-	tasks, err := s.tStore.GetTasksByCategory(category)
+func (t *TaskService) GetTasksByCategory(category, addr string) ([]models.Task, error) {
+	tasks, err := t.tStore.GetTasksByCategory(category)
 	if err != nil {
 		return nil, err
 	}
-	if addr == "" {
+	if len(addr) < 15 {
 		return tasks, nil
 	}
-	userTasks, err := s.tStore.GetUserCompletedTasks(addr)
+
+	userTasks, err := t.tStore.GetUserCompletedTasks(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -56,27 +57,27 @@ func (s *TaskService) GetTasksByCategory(category, addr string) ([]models.Task, 
 	return tasks, nil
 }
 
-func (s *TaskService) GetUserCompleteTasks(addr string) ([]models.UserTask, error) {
-	tasks, err := s.tStore.GetUserCompletedTasks(addr)
+func (t *TaskService) GetUserCompleteTasks(addr string) ([]models.UserTask, error) {
+	tasks, err := t.tStore.GetUserCompletedTasks(addr)
 	if err != nil {
 		return nil, err
 	}
 	return tasks, nil
 }
 
-func (s *TaskService) CompleteTask(addr string, taskID int) error {
+func (t *TaskService) CompleteTask(addr string, taskID int) error {
 
-	task, err := s.GetTaskById(taskID)
+	task, err := t.GetTaskById(taskID)
 	if err != nil {
 		return err
 	}
 
-	err = s.uStore.AddPointsByAddr(addr, task.Reward)
+	err = t.uStore.AddPointsByAddr(addr, task.Reward)
 	if err != nil {
 		return err
 	}
 
-	err = s.uStore.AddCompletedTask(addr, taskID)
+	err = t.uStore.AddCompletedTask(addr, taskID)
 	if err != nil {
 		return err
 	}
@@ -84,26 +85,26 @@ func (s *TaskService) CompleteTask(addr string, taskID int) error {
 	return nil
 }
 
-func (s *TaskService) GetTaskById(taskid int) (*models.Task, error) {
-	task, err := s.tStore.GetTaskByID(taskid)
+func (t *TaskService) GetTaskById(taskid int) (*models.Task, error) {
+	task, err := t.tStore.GetTaskByID(taskid)
 	if err != nil {
 		return &models.Task{}, err
 	}
 	return task, nil
 }
 
-func (s *TaskService) GetUserInfoTask(userid string) (models.UserInfoTask, error) {
-	user, err := s.uStore.GetUserBySolAddress(userid)
+func (t *TaskService) GetUserInfoTask(userid string) (models.UserInfoTask, error) {
+	user, err := t.uStore.GetUserBySolAddress(userid)
 	if err != nil {
 		return models.UserInfoTask{}, err
 	}
 
-	rank, err := s.uStore.GetUserRank(user)
+	rank, err := t.uStore.GetUserRank(user)
 	if err != nil {
 		return models.UserInfoTask{}, err
 	}
 
-	completedTasks, err := s.tStore.GetUserCompletedTasks(userid)
+	completedTasks, err := t.tStore.GetUserCompletedTasks(userid)
 	if err != nil {
 		return models.UserInfoTask{}, err
 	}
@@ -117,6 +118,10 @@ func (s *TaskService) GetUserInfoTask(userid string) (models.UserInfoTask, error
 	}, nil
 }
 
-func (s *TaskService) CheckStonksTrade(addr string) (bool, error) {
+func (t *TaskService) CheckStonksTrade(addr string) (bool, error) {
 	return taskVerifier.GetInstance().VerifyStonksTradeTask(addr)
+}
+
+func (t *TaskService) RefreshDailyTask() error {
+	return t.tStore.RefreshDailyTasks()
 }
