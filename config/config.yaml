@@ -10,11 +10,11 @@ server:
   WriteTimeout: 60
 
 mysql:
-  host: localhost
+  host: 38.181.56.40
   port: 3306
   user: root
-  password: root
-  database: mystonks
+  password: ms@123#
+  database: Prod
 
 redis:
   url: redis://localhost:6379/0
